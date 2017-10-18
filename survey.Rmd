@@ -10,6 +10,7 @@ runtime: shiny
 
 # Mission
 
+
 ```{r}
 
 library(reshape2)
@@ -39,16 +40,17 @@ plot_ly(temp,x=temp$n,y=temp2,type='bar') %>% layout(margin = list(l = 200, pad 
 })
 
 output$table <- renderDataTable({
+  
 category <- event_data('plotly_click')$y
- if (length(category) == 0){
+
+ if(length(category) == 0){
 #   mission[,c(4,6)] 
    NULL
  } else {
- mission[mission$value==category,c(4,6)]
- }
-  })
+    datatable(mission[mission$value==category,c(4,6)])
+  }
+})
 }
-
 shinyApp(ui, server)
 
 ```
