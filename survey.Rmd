@@ -1,0 +1,65 @@
+---
+title: "Strategic Planning"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    runtime: shiny
+---
+
+-----------------------------------------------------------------------
+
+# Mission
+
+```{r}
+
+library(reshape2)
+library(readxl)
+library(dplyr)
+library(plotly)
+library(shiny)
+library(DT)
+
+mission <- read_xlsx('text.xlsx', sheet = 'Mission')
+mission <- melt(mission,id.vars = c('Q1: Affiliation','Category','Q4: Mission relevant',
+                                    'Q5: Mission'))
+mission <- mission[complete.cases(mission),]
+temp <- mission %>% group_by(value) %>% summarise(n = n())
+temp2 <- reorder(temp$value, temp$n)
+  
+
+ui <- fluidPage(
+  plotlyOutput('chart'),
+  dataTableOutput('table')
+)
+
+server <- function(input, output,...){
+  
+output$chart <- renderPlotly({
+plot_ly(temp,x=temp$n,y=temp2,type='bar') %>% layout(margin = list(l = 200, pad = 4), font=list(size=12))
+})
+
+output$table <- renderDataTable({
+category <- event_data('plotly_click')$y
+ if (length(category) == 0){
+   mission
+ } else {
+ mission[mission$value==category,c(4,6)]
+ }
+  })
+}
+
+shinyApp(ui, server)
+
+```
+
+# Vision
+```{r}
+
+vision <- read_xlsx('text.xlsx', sheet = 'Vision')
+vision <- melt(vision,id.vars = c('Q1: Affiliation','Category','Q7: Vision relevant',
+                                    'Q11: Vision'))
+vision <- vision[complete.cases(mission),]
+barplot(table(vision$value))
+
+```
+
