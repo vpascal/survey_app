@@ -3,7 +3,7 @@ title: "Strategic Planning"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
-    runtime: shiny
+runtime: shiny
 ---
 
 -----------------------------------------------------------------------
@@ -16,8 +16,8 @@ library(reshape2)
 library(readxl)
 library(dplyr)
 library(plotly)
-library(shiny)
 library(DT)
+library(shiny)
 
 mission <- read_xlsx('text.xlsx', sheet = 'Mission')
 mission <- melt(mission,id.vars = c('Q1: Affiliation','Category','Q4: Mission relevant',
@@ -41,7 +41,8 @@ plot_ly(temp,x=temp$n,y=temp2,type='bar') %>% layout(margin = list(l = 200, pad 
 output$table <- renderDataTable({
 category <- event_data('plotly_click')$y
  if (length(category) == 0){
-   mission[,c(4,6)]
+#   mission[,c(4,6)] 
+   NULL
  } else {
  mission[mission$value==category,c(4,6)]
  }
@@ -52,7 +53,10 @@ shinyApp(ui, server)
 
 ```
 
+
 # Vision
+
+
 ```{r}
 
 vision <- read_xlsx('text.xlsx', sheet = 'Vision')
@@ -89,7 +93,9 @@ shinyApp(ui, server)
 
 ```
 
+
 # Core Values
+
 
 ```{r}
 
