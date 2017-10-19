@@ -21,36 +21,56 @@ library(DT)
 library(shiny)
 
 mission <- read_xlsx('text.xlsx', sheet = 'Mission')
-mission <- melt(mission,id.vars = c('Q1: Affiliation','Category','Q4: Mission relevant',
+mission <- melt(mission,id.vars = c('Affiliation','Category','Q4: Mission relevant',
                                     'Q5: Mission'))
 mission <- mission[complete.cases(mission),]
-temp <- mission %>% group_by(value) %>% summarise(n = n())
-temp2 <- reorder(temp$value, temp$n)
-  
+temp <- mission %>% group_by(value, Affiliation) %>% summarise(n = n())
+
+
+
 
 ui <- fluidPage(
+  selectInput('selector',label = "Respondent:", choices = c('All','Student','Faculty','Staff', 'Alumni'), selected = "All"),
   plotlyOutput('chart'),
   dataTableOutput('table')
 )
 
 server <- function(input, output,...){
   
-output$chart <- renderPlotly({
-plot_ly(temp,x=temp$n,y=temp2,type='bar') %>% layout(margin = list(l = 200, pad = 4), font=list(size=12))
-})
-
-output$table <- renderDataTable({
+mission <- reactive({
   
-category <- event_data('plotly_click')$y
-
- if(length(category) == 0){
-#   mission[,c(4,6)] 
-   NULL
- } else {
-    datatable(mission[mission$value==category,c(4,6)], escape=1)
+  if(input$selector == 'All'){
+    temp <- temp  
+    temp$value <- factor(temp$value, levels = unique(temp$value)[order(temp$n, decreasing = FALSE)])
+    temp
+    
+  } else{
+    
+    temp <- temp[temp$Affiliation == input$selector,]
+    temp$value <- factor(temp$value, levels = unique(temp$value)[order(temp$n, decreasing = FALSE)])
+    temp
   }
+})  
+
+
+
+
+output$chart <- renderPlotly({
+plot_ly(mission(),x=mission()$n,y=mission()$value,type ='bar') %>% layout(margin = list(l = 200, pad = 4), font=list(size=12))
 })
-}
+
+#  output$table <- renderDataTable({
+#    
+#  category <- event_data('plotly_click')$y
+#  
+#   if(length(category) == 0){
+#    #   mission[,c(4,6)] 
+#     NULL
+#  } else {
+#      mission[mission$value==category,]
+#    }
+#  })
+ }
 shinyApp(ui, server)
 
 ```
