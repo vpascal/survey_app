@@ -47,7 +47,7 @@ category <- event_data('plotly_click')$y
 #   mission[,c(4,6)] 
    NULL
  } else {
-    datatable(mission[mission$value==category,c(4,6)])
+    datatable(mission[mission$value==category,c(4,6)], escape=1)
   }
 })
 }
@@ -84,9 +84,10 @@ plot_ly(temp_v,x=temp_v$n,y=temp2_v,type='bar') %>% layout(margin = list(l = 200
 output$table2 <- renderDataTable({
 category <- event_data('plotly_click')$y
  if (length(category) == 0){
-   vision[,c(4,6)]
+  # vision[,c(4,6)]
+   NULL
  } else {
- vision[vision$value==category,c(4,6)]
+ datatable(vision[vision$value==category,c(4,6)],escape=1)
  }
   })
 }
@@ -125,9 +126,10 @@ plot_ly(temp_vl,x=temp_vl$n,y=temp2_vl,type='bar') %>% layout(margin = list(l = 
 output$table3 <- renderDataTable({
 category <- event_data('plotly_click')$y
  if (length(category) == 0){
-   values[,c(4,6)]
+ #  values[,c(4,6)]
+   NULL
  } else {
- values[values$value==category,c(4,6)]
+ datatable(values[values$value==category,c(4,6)],escape = 1)
  }
   })
 }
