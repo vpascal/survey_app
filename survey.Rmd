@@ -17,30 +17,28 @@ library(reshape2)
 library(readxl)
 library(dplyr)
 library(plotly)
-library(DT)
 library(shiny)
+library(DT)
 
 mission <- read_xlsx('text.xlsx', sheet = 'Mission')
 mission <- melt(mission,id.vars = c('Affiliation','Category','Q4: Mission relevant',
                                     'Q5: Mission'))
-mission <- mission[complete.cases(mission),]
-temp <- mission %>% group_by(value, Affiliation) %>% summarise(n = n())
-
-
+mission_raw <- mission[complete.cases(mission),]
+temp <- mission_raw %>% group_by(value, Affiliation) %>% summarise(n = n())
 
 
 ui <- fluidPage(
-  selectInput('selector',label = "Respondent:", choices = c('All','Student','Faculty','Staff', 'Alumni'), selected = "All"),
+  selectInput('selector',label = "Respondent:", choices = c('All','Student','Faculty','Staff', 'Alumni'), selected = "All",width = '20%'),
   plotlyOutput('chart'),
   dataTableOutput('table')
 )
 
-server <- function(input, output,...){
+server <- function(input, output,session){
   
 mission <- reactive({
   
   if(input$selector == 'All'){
-    temp <- temp  
+    temp <- temp  %>% group_by(value) %>% summarise(n=sum(n))
     temp$value <- factor(temp$value, levels = unique(temp$value)[order(temp$n, decreasing = FALSE)])
     temp
     
@@ -52,24 +50,25 @@ mission <- reactive({
   }
 })  
 
-
-
+container <- reactive({
+  
+  if(input$selector == 'All'){
+    container <- mission_raw
+    container
+  } else
+  container <- mission_raw[mission_raw$Affiliation == input$selector,]
+  container
+  
+})
 
 output$chart <- renderPlotly({
 plot_ly(mission(),x=mission()$n,y=mission()$value,type ='bar') %>% layout(margin = list(l = 200, pad = 4), font=list(size=12))
 })
 
-#  output$table <- renderDataTable({
-#    
-#  category <- event_data('plotly_click')$y
-#  
-#   if(length(category) == 0){
-#    #   mission[,c(4,6)] 
-#     NULL
-#  } else {
-#      mission[mission$value==category,]
-#    }
-#  })
+output$table <-renderDataTable({category <- event_data('plotly_click')$y
+container()[container()$value==category,c(4,6)]
+ 
+  })
  }
 shinyApp(ui, server)
 
