@@ -37,44 +37,54 @@ ui <- fluidPage(
 
 server <- function(input, output,session){
   
-mission <- reactive({
-  
-  if(input$selector == 'All respondents'){
-    temp <- temp  %>% group_by(value) %>% summarise(n=sum(n))
-    temp$value <- factor(temp$value, levels = unique(temp$value)[order(temp$n, decreasing = FALSE)])
-    temp
+  mission <- reactive({
     
-  } else{
+    if (input$selector == 'All respondents') {
+      temp <- temp  %>% group_by(value) %>% summarise(n = sum(n))
+      temp$value <- factor(temp$value, levels = unique(temp$value)[order(temp$n, decreasing = FALSE)])
+      temp
+      
+    } else{
+      
+      temp <- temp[temp$Affiliation == input$selector,]
+      temp$value <- factor(temp$value, levels = unique(temp$value)[order(temp$n, decreasing = FALSE)])
+      temp
+    }
+  })  
+  
+  container <- reactive({
     
-    temp <- temp[temp$Affiliation == input$selector,]
-    temp$value <- factor(temp$value, levels = unique(temp$value)[order(temp$n, decreasing = FALSE)])
-    temp
-  }
-})  
-
-container <- reactive({
-  
-  if(input$selector == 'All respondents'){
-    container <- mission_raw
-    container
-  } else
-  container <- mission_raw[mission_raw$Affiliation == input$selector,]
-  container
-  
-})
-
-output$chart <- renderPlotly({
-plot_ly(mission(),x=mission()$n,y=mission()$value,type ='bar') %>% 
-     layout(margin = list(l = 200, pad = 4), font=list(size=12),
-     title =paste0('Improving PCOE mission: ',input$selector),
-     xaxis=list(title='Number of responses'))
-})
-
-output$table <-renderDataTable({category <- event_data('plotly_click')$y
-datatable(container()[container()$value==category,c(4,6)], escape=F)
- 
+    if (input$selector == 'All respondents') {
+      container <- mission_raw
+      container
+    } else
+      container <- mission_raw[mission_raw$Affiliation == input$selector,]
+      container
+    
   })
- }
+  
+  output$chart <- renderPlotly({
+    plot_ly(mission(),
+            x = mission()$n,
+            y = mission()$value,
+            type = 'bar') %>%
+            layout(
+            margin = list(l = 200, pad = 4),
+            font = list(size = 12),
+            title = paste0('Improving PCOE mission: ', input$selector),
+            xaxis = list(title = 'Number of responses')
+            )
+  })
+  
+  output$table <- renderDataTable({
+    category <- event_data('plotly_click')$y
+    datatable(container()[container()$value == category, c(4, 6)],
+              colnames = c("Comment","Topic"),
+              escape = F,
+              options = list(dom = 't'))
+  
+  })
+}
 shinyApp(ui, server)
 
 ```
@@ -87,16 +97,17 @@ shinyApp(ui, server)
 
 vision <- read_xlsx('text.xlsx', sheet = 'Vision')
 vision <- melt(vision,id.vars = c('Affiliation','Category','Q7: Vision relevant',
-                                    'Q11: Vision'))
+                                  'Q11: Vision'))
 vision_raw <- vision[complete.cases(vision),]
 
 temp_v <- vision %>% group_by(value,Affiliation) %>% summarise(n = n())
 
 
 ui <- fluidPage(
- 
+  
   selectInput('visionselector',label = "Respondent:", choices = 
-                c('All respondents','Students','Faculty','Staff', 'Alumni'), selected = "All respondents",width = '20%'),
+              c('All respondents','Students','Faculty','Staff', 'Alumni'), 
+              selected = "All respondents",width = '20%'),
   plotlyOutput('chart2'),
   dataTableOutput('table2')
 )
@@ -104,43 +115,52 @@ ui <- fluidPage(
 server <- function(input, output,...){
   
   vision <- reactive({
-  
-  if(input$visionselector == 'All respondents'){
-    temp_v <- temp_v  %>% group_by(value) %>% summarise(n=sum(n))
-    temp_v$value <- factor(temp_v$value, levels = unique(temp_v$value)[order(temp_v$n, decreasing = FALSE)])
-    temp_v
     
-  } else{
+    if (input$visionselector == 'All respondents') {
+      temp_v <- temp_v  %>% group_by(value) %>% summarise(n=sum(n))
+      temp_v$value <- factor(temp_v$value, levels = unique(temp_v$value)[order(temp_v$n, decreasing = FALSE)])
+      temp_v
+      
+    } else{
+      
+      temp_v <- temp_v[temp_v$Affiliation == input$visionselector,]
+      temp_v$value <- factor(temp_v$value, levels = unique(temp_v$value)[order(temp_v$n, decreasing = FALSE)])
+      temp_v
+    }
+  })  
+  
+  container <- reactive({
     
-    temp_v <- temp_v[temp_v$Affiliation == input$visionselector,]
-    temp_v$value <- factor(temp_v$value, levels = unique(temp_v$value)[order(temp_v$n, decreasing = FALSE)])
-    temp_v
-  }
-})  
-
-container <- reactive({
-  
-  if(input$visionselector == 'All respondents'){
-    container <- vision_raw
-    container
-  } else {
-  container <- vision_raw[vision_raw$Affiliation == input$visionselector,]
-  container
-  }
-})
-  
-  
-output$chart2 <- renderPlotly({
-plot_ly(vision(),x=vision()$n,y=vision()$value,type='bar') %>%
-     layout(margin = list(l = 200, pad = 4), font=list(size=12),
-     title =paste0('Improving PCOE vision: ',input$visionselector),
-     xaxis=list(title='Number of responses'))
-})
-
-output$table2 <- renderDataTable({category <- event_data('plotly_click')$y
- datatable(container()[container()$value == category,c(4,6)],escape=F)
+    if (input$visionselector == 'All respondents') {
+      container <- vision_raw
+      container
+    } else {
+      container <- vision_raw[vision_raw$Affiliation == input$visionselector,]
+      container
+    }
   })
- }
+  
+  
+  output$chart2 <- renderPlotly({
+    plot_ly(vision(),
+            x = vision()$n,
+            y = vision()$value,
+            type = 'bar') %>%
+            layout(
+            margin = list(l = 200, pad = 4),
+            font = list(size = 12),
+            title = paste0('Improving PCOE vision: ', input$visionselector),
+            xaxis = list(title = 'Number of responses')
+            )
+  })
+  
+  output$table2 <- renderDataTable({category <- event_data('plotly_click')$y
+  datatable(container()[container()$value == category, c(4, 6)], 
+            colnames = c("Comment","Topic"),
+            escape = F,
+            options = list(dom = 't'))
+  })
+}
 
 shinyApp(ui, server)
 
@@ -155,7 +175,7 @@ shinyApp(ui, server)
 
 values <- read_xlsx('text.xlsx', sheet = 'Values')
 values <- melt(values,id.vars = c('Affiliation','Category','Q10: Relavant',
-                                    'Q8: Values'))
+                                  'Q8: Values'))
 values_raw <- values[complete.cases(values),]
 
 temp_vl <- values %>% group_by(value,Affiliation) %>% summarise(n = n())
@@ -173,10 +193,10 @@ ui <- fluidPage(
 server <- function(input, output,...){
   
   values <- reactive({
-  
-  if(input$valueselector == 'All respondents'){
-    temp_vl <- temp_vl  %>% group_by(value) %>% summarise(n=sum(n))
-    temp_vl$value <- factor(temp_vl$value, levels = unique(temp_vl$value)[order(temp_vl$n, decreasing = FALSE)])
+    
+      if (input$valueselector == 'All respondents') {
+      temp_vl <- temp_vl  %>% group_by(value) %>% summarise(n = sum(n))
+      temp_vl$value <- factor(temp_vl$value, levels = unique(temp_vl$value)[order(temp_vl$n, decreasing = FALSE)])
     temp_vl
     
   } else{
@@ -189,9 +209,9 @@ server <- function(input, output,...){
   
   container <- reactive({
   
-  if(input$valueselector == 'All respondents'){
-    container <- values_raw
-    container
+    if (input$valueselector == 'All respondents') {
+      container <- values_raw
+      container
   } else
   container <- values_raw[values_raw$Affiliation == input$valueselector,]
   container
@@ -211,7 +231,10 @@ plot_ly(values(),x=values()$n,y=values()$value,type='bar') %>%
 output$table3 <- renderDataTable({
 category <- event_data('plotly_click')$y
  
- datatable(container()[container()$value == category,c(4,6)],escape = F)
+ datatable(container()[container()$value == category,c(4,6)],
+           colnames = c("Comment","Topic"),
+           escape = F,
+           options = list(dom = 't'))
   })
 }
 
